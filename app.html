@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabFlow — AI Bookmark Dashboard</title>
+  <meta name="description" content="TabFlow standalone — organize bookmarks with AI-powered categories. No Chrome extension needed.">
+  <style>
+    /* ================================================================
+       TabFlow Standalone — CSS Custom Properties & Base
+       ================================================================ */
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --bg-hover: #e2e8f0;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-subtle: #f1f5f9;
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --text-link: #6366f1;
+
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', system-ui, sans-serif;
+
+      --transition-fast: 150ms ease;
+      --transition-normal: 250ms ease;
+
+      --header-height: 60px;
+      --max-width: 1200px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #1a2332;
+        --bg-hover: #334155;
+        --bg-card: #1e293b;
+        --border-color: #334155;
+        --border-subtle: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-tertiary: #64748b;
+        --text-link: #818cf8;
+        --accent: #818cf8;
+        --accent-hover: #6366f1;
+        --accent-light: #1e1b4b;
+        --accent-glow: rgba(129, 140, 248, 0.15);
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+        --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+    }
+
+    body.dark {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #1a2332;
+      --bg-hover: #334155;
+      --bg-card: #1e293b;
+      --border-color: #334155;
+      --border-subtle: #1e293b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+      --text-link: #818cf8;
+      --accent: #818cf8;
+      --accent-hover: #6366f1;
+      --accent-light: #1e1b4b;
+      --accent-glow: rgba(129, 140, 248, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    body.light {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --bg-hover: #e2e8f0;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-subtle: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --text-link: #6366f1;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-light: #eef2ff;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background var(--transition-normal), color var(--transition-normal);
+    }
+
+    .hidden { display: none !important; }
+
+    /* ---- Header ---- */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: var(--header-height);
+      padding: 0 24px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition-normal), border-color var(--transition-normal);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .search-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      pointer-events: none;
+      transition: color var(--transition-fast);
+    }
+
+    .search-wrapper:focus-within .search-icon { color: var(--accent); }
+
+    .search-input {
+      width: 100%;
+      padding: 9px 40px 9px 40px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 999px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .search-input::placeholder { color: var(--text-tertiary); }
+    .search-input:focus {
+      border-color: var(--accent);
+      background: var(--bg-secondary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .search-clear:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      outline: none;
+      text-decoration: none;
+    }
+
+    .btn:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-danger:hover { background: var(--danger-hover); }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-icon:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .btn-small { padding: 4px 10px; font-size: 0.8rem; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+    }
+
+    .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* ---- Main Layout ---- */
+    .main {
+      flex: 1;
+      padding: 24px;
+      max-width: var(--max-width);
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ---- Stats Bar ---- */
+    .stats-bar {
+      padding: 10px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-card);
+    }
+
+    /* ---- Section ---- */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .section-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+
+    /* ---- Category Grid ---- */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    /* ---- Category Card ---- */
+    .category-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      transition: all var(--transition-fast);
+      animation: fadeIn 0.3s ease both;
+    }
+
+    .category-card:nth-child(1) { animation-delay: 0.02s; }
+    .category-card:nth-child(2) { animation-delay: 0.04s; }
+    .category-card:nth-child(3) { animation-delay: 0.06s; }
+    .category-card:nth-child(4) { animation-delay: 0.08s; }
+    .category-card:nth-child(5) { animation-delay: 0.10s; }
+    .category-card:nth-child(6) { animation-delay: 0.12s; }
+
+    .category-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .card-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .card-list-item {
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .card-list-item:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+    .card-list-item img.favicon {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .card-list-item .bm-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-list-item .bm-delete {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all var(--transition-fast);
+      padding: 0;
+      line-height: 1;
+    }
+
+    .card-list-item:hover .bm-delete { opacity: 1; }
+    .card-list-item .bm-delete:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+    .card-more { margin-top: 8px; text-align: center; }
+    .card-more-link {
+      font-size: 0.8rem;
+      color: var(--accent);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font-sans);
+    }
+
+    .card-more-link:hover { text-decoration: underline; }
+
+    /* ---- Bookmark List (flat) ---- */
+    .bookmark-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .bookmark-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+      text-decoration: none;
+      color: var(--text-primary);
+    }
+
+    .bookmark-item:hover { background: var(--bg-tertiary); }
+
+    .bookmark-item .favicon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      border-radius: 2px;
+    }
+
+    .bookmark-item .bm-info { flex: 1; min-width: 0; }
+
+    .bookmark-item .bm-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bookmark-item .bm-url {
+      font-size: 0.75rem;
+      color: var(--text-tertiary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bookmark-item .bm-tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-light);
+      color: var(--accent);
+      flex-shrink: 0;
+      font-weight: 500;
+    }
+
+    /* ---- Suggestions Panel ---- */
+    .suggestions-panel {
+      margin-top: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+    }
+
+    /* ---- Empty State ---- */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon {
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-state h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+      max-width: 400px;
+      margin: 0 auto 20px;
+      line-height: 1.5;
+    }
+
+    .empty-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ---- Modal Overlay ---- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      outline: none;
+      transition: all var(--transition-fast);
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    /* ---- Footer ---- */
+    .footer {
+      padding: 16px 24px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-tertiary);
+      border-top: 1px solid var(--border-subtle);
+      transition: border-color var(--transition-normal);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .footer-link {
+      color: var(--text-link);
+      text-decoration: none;
+      transition: opacity var(--transition-fast);
+    }
+
+    .footer-link:hover { opacity: 0.8; text-decoration: underline; }
+
+    .footer-sep { opacity: 0.3; }
+    .footer-version { opacity: 0.5; }
+
+    .footer-badge img { display: inline-block; vertical-align: middle; }
+
+    /* ---- Scrollbar ---- */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+    /* ---- Animations ---- */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    mark {
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 768px) {
+      .header { padding: 0 12px; gap: 8px; }
+      .header-center { display: none; }
+      .main { padding: 16px 12px; }
+      .category-grid { grid-template-columns: 1fr; }
+      .modal { max-width: 90vw; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ================================================================
+       Header
+       ================================================================ -->
+  <header class="header">
+    <div class="header-left">
+      <!-- Inline SVG logo — tab/bookmark icon -->
+      <svg class="logo" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="36" height="36" rx="8" fill="url(#logoGrad)"/>
+        <path d="M10 8h16a2 2 0 012 2v15l-7-4-7 4V10a2 2 0 012-2z" fill="#fff" fill-opacity="0.95"/>
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="36" y2="36">
+            <stop stop-color="#6366f1"/><stop offset="1" stop-color="#8b5cf6"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 class="title">TabFlow</h1>
+    </div>
+    <div class="header-center">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" id="searchInput" class="search-input" placeholder="Search bookmarks by title or URL..." autocomplete="off">
+        <button id="searchClear" class="search-clear hidden" aria-label="Clear search">&times;</button>
+      </div>
+    </div>
+    <div class="header-right">
+      <button id="addBookmarkBtn" class="btn btn-success" title="Add new bookmark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add
+      </button>
+      <button id="importBtn" class="btn btn-secondary" title="Import bookmarks from JSON file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Import
+      </button>
+      <button id="aiOrganizeBtn" class="btn btn-primary" title="Auto-categorize bookmarks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+        AI Organize
+      </button>
+      <button id="exportBtn" class="btn btn-secondary" title="Export bookmarks as JSON">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export
+      </button>
+      <button id="darkModeToggle" class="btn btn-icon" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="hidden">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================================================================
+       Add Bookmark Modal
+       ================================================================ -->
+  <div id="addModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Add Bookmark</h3>
+      <div class="form-group">
+        <label for="addTitle">Title</label>
+        <input type="text" id="addTitle" placeholder="e.g. My favorite site" autofocus>
+      </div>
+      <div class="form-group">
+        <label for="addUrl">URL</label>
+        <input type="text" id="addUrl" placeholder="https://example.com">
+      </div>
+      <div class="form-group">
+        <label for="addFolder">Folder / Category (optional)</label>
+        <input type="text" id="addFolder" placeholder="e.g. Development">
+      </div>
+      <div class="modal-actions">
+        <button id="addCancel" class="btn btn-secondary">Cancel</button>
+        <button id="addSubmit" class="btn btn-primary">Add Bookmark</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="importFileInput" accept=".json" class="hidden">
+
+  <!-- ================================================================
+       Main Content
+       ================================================================ -->
+  <main class="main">
+    <!-- Stats bar -->
+    <div class="stats-bar" id="statsBar">
+      <span id="statsText">Loading bookmarks...</span>
+    </div>
+
+    <!-- Search results mode -->
+    <section id="searchResults" class="search-results hidden">
+      <h2 class="section-title">Search Results</h2>
+      <div id="searchResultsList" class="bookmark-list"></div>
+    </section>
+
+    <!-- Category cards -->
+    <section id="categorySection">
+      <div class="section-header">
+        <h2 class="section-title">Categories</h2>
+        <span id="categoryCount" class="section-subtitle"></span>
+      </div>
+      <div id="categoryGrid" class="category-grid"></div>
+    </section>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="empty-state hidden">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="64" height="64" class="empty-icon">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      <h3>No bookmarks yet</h3>
+      <p>Start by adding bookmarks manually, or import your existing Chrome bookmarks.</p>
+      <div class="empty-actions">
+        <button id="emptyAddBtn" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add your first bookmark
+        </button>
+        <button id="emptyImportBtn" class="btn btn-secondary">Import from Chrome</button>
+      </div>
+    </div>
+
+    <!-- Tag suggestions panel (shown after AI Organize) -->
+    <section id="suggestionsPanel" class="suggestions-panel hidden">
+      <div class="section-header">
+        <h2 class="section-title">AI Suggestions</h2>
+        <button id="dismissSuggestions" class="btn btn-small btn-ghost">Dismiss</button>
+      </div>
+      <div id="suggestionsList" class="bookmark-list"></div>
+    </section>
+  </main>
+
+  <!-- ================================================================
+       Footer
+       ================================================================ -->
+  <footer class="footer">
+    <div class="footer-main">
+      <span>Built by <strong>Selfloom</strong></span>
+      <span class="footer-sep">·</span>
+      <span class="footer-links">
+        <a href="https://selfloom.github.io/tabflow/" target="_blank" rel="noopener" class="footer-link">TabFlow Home</a>
+        <span class="footer-sep">·</span>
+        <a href="https://github.com/selfloom/tabflow" target="_blank" rel="noopener" class="footer-link">GitHub</a>
+        <span class="footer-sep">·</span>
+        <a href="https://selfloom.github.io/invoco-demo/" target="_blank" rel="noopener" class="footer-link">Also try: Invoco</a>
+        <span class="footer-sep">·</span>
+        <span class="footer-version">v1.0.0</span>
+      </span>
+    </div>
+    <div class="footer-badge">
+      <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fselfloom.github.io%2Ftabflow%2Fapp.html&count_bg=%23312e81&title_bg=%231e293b&icon=&icon_color=%2394a3b8&title=views&edge_flat=false" alt="page views" loading="lazy">
+    </div>
+  </footer>
+
+  <!-- ================================================================
+       Scripts (all inline)
+       ================================================================ -->
+  <script>
+  (function() {
+    /* ================================================================
+       Categorizer — keyword-based bookmark auto-tagger
+       (inlined from categorizer.js, adapted for localStorage)
+       ================================================================ */
+    const CATEGORY_RULES = [
+      {
+        category: 'Development',
+        domains: ['github.com', 'stackoverflow.com', 'npmjs.com', 'gitlab.com', 'bitbucket.org',
+                  'dev.to', 'code.visualstudio.com', 'docker.com', 'kubernetes.io'],
+        keywords: ['github', 'stackoverflow', 'npm', 'git', 'docker', 'kubernetes', 'code', 'dev', 'programming']
+      },
+      {
+        category: 'Media',
+        domains: ['youtube.com', 'vimeo.com', 'twitch.tv', 'netflix.com', 'hulu.com',
+                  'spotify.com', 'disneyplus.com', 'hbomax.com', 'dailymotion.com'],
+        keywords: ['video', 'watch', 'stream', 'music', 'playlist', 'episode', 'movie']
+      },
+      {
+        category: 'Social',
+        domains: ['reddit.com', 'twitter.com', 'x.com', 'news.ycombinator.com', 'facebook.com',
+                  'instagram.com', 'discord.com', 'slack.com', 'telegram.org', 'tiktok.com',
+                  'threads.net', 'bsky.app', 'mastodon.social'],
+        keywords: ['social', 'community', 'chat', 'discussion', 'forum', 'post']
+      },
+      {
+        category: 'Shopping',
+        domains: ['amazon.com', 'ebay.com', 'etsy.com', 'aliexpress.com', 'walmart.com',
+                  'target.com', 'bestbuy.com', 'shopify.com', 'newegg.com'],
+        keywords: ['buy', 'shop', 'price', 'deal', 'discount', 'product', 'order', 'cart']
+      },
+      {
+        category: 'Productivity',
+        domains: ['docs.google.com', 'notion.so', 'airtable.com', 'figma.com', 'trello.com',
+                  'asana.com', 'monday.com', 'clickup.com', 'linear.app', 'miro.com',
+                  'canva.com', 'todoist.com', 'evernote.com'],
+        keywords: ['docs', 'document', 'sheet', 'slide', 'board', 'project', 'task', 'note', 'design']
+      },
+      {
+        category: 'Reading',
+        domains: ['medium.com', 'substack.com', 'blog', 'wikipedia.org', 'nytimes.com',
+                  'theguardian.com', 'wsj.com', 'bloomberg.com', 'techcrunch.com', 'theverge.com',
+                  'wired.com', 'arstechnica.com'],
+        keywords: ['article', 'blog', 'read', 'news', 'story', 'post', 'essay', 'wiki']
+      },
+      {
+        category: 'Research',
+        domains: ['arxiv.org', 'scholar.google.com', 'researchgate.net', 'sci-hub.se',
+                  'pubmed.ncbi.nlm.nih.gov', 'ieee.org', 'acm.org', 'springer.com',
+                  'nature.com', 'science.org'],
+        keywords: ['paper', 'research', 'study', 'journal', 'doi', 'abstract', 'thesis', 'publication']
+      },
+      {
+        category: 'Career',
+        domains: ['linkedin.com', 'indeed.com', 'glassdoor.com', 'monster.com',
+                  'ziprecruiter.com', 'levels.fyi', 'blindapp.com'],
+        keywords: ['job', 'career', 'resume', 'interview', 'salary', 'hiring', 'recruiter']
+      }
+    ];
+
+    const TLD_CATEGORIES = {
+      '.edu': 'Education',
+      '.gov': 'Government',
+      '.org': 'Organizations',
+      '.mil': 'Military'
+    };
+
+    function extractDomain(url) {
+      try {
+        const u = new URL(url);
+        return u.hostname.replace(/^www\./, '').toLowerCase();
+      } catch {
+        const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/:]+)/i);
+        return match ? match[1].toLowerCase() : '';
+      }
+    }
+
+    function categorizeBookmark(bookmark) {
+      const domain = extractDomain(bookmark.url || '');
+      const title = (bookmark.title || '').toLowerCase();
+      const combined = domain + ' ' + title;
+
+      for (const rule of CATEGORY_RULES) {
+        for (const d of rule.domains) {
+          if (domain.includes(d)) {
+            return { category: rule.category, confidence: 'high' };
+          }
+        }
+      }
+
+      for (const rule of CATEGORY_RULES) {
+        for (const kw of rule.keywords) {
+          if (combined.includes(kw)) {
+            return { category: rule.category, confidence: 'medium' };
+          }
+        }
+      }
+
+      for (const [tld, category] of Object.entries(TLD_CATEGORIES)) {
+        if (domain.endsWith(tld)) {
+          return { category, confidence: 'low' };
+        }
+      }
+
+      return { category: 'Uncategorized', confidence: 'low' };
+    }
+
+    function categorizeAll(bookmarks) {
+      const results = {};
+      for (const bm of bookmarks) {
+        if (!bm.url) continue;
+        results[bm.id] = categorizeBookmark(bm);
+      }
+      localStorage.setItem('tabflow_tags', JSON.stringify(results));
+      return results;
+    }
+
+    /* ================================================================
+       Controller — TabFlow Standalone
+       ================================================================ */
+
+    /* ---- Seed Data ---- */
+    const SEED_BOOKMARKS = [
+      { id: 'seed1',  title: 'GitHub',            url: 'https://github.com',          dateAdded: Date.now(), folder: 'Development' },
+      { id: 'seed2',  title: 'YouTube',           url: 'https://youtube.com',         dateAdded: Date.now(), folder: 'Media' },
+      { id: 'seed3',  title: 'Reddit',            url: 'https://reddit.com',          dateAdded: Date.now(), folder: 'Social' },
+      { id: 'seed4',  title: 'Amazon',            url: 'https://amazon.com',          dateAdded: Date.now(), folder: 'Shopping' },
+      { id: 'seed5',  title: 'Notion',            url: 'https://notion.so',           dateAdded: Date.now(), folder: 'Productivity' },
+      { id: 'seed6',  title: 'Wikipedia',         url: 'https://wikipedia.org',       dateAdded: Date.now(), folder: 'Reading' },
+      { id: 'seed7',  title: 'arXiv',             url: 'https://arxiv.org',           dateAdded: Date.now(), folder: 'Research' },
+      { id: 'seed8',  title: 'LinkedIn',          url: 'https://linkedin.com',        dateAdded: Date.now(), folder: 'Career' },
+      { id: 'seed9',  title: 'Stack Overflow',    url: 'https://stackoverflow.com',   dateAdded: Date.now(), folder: 'Development' },
+      { id: 'seed10', title: 'MDN Web Docs',      url: 'https://developer.mozilla.org', dateAdded: Date.now(), folder: 'Development' },
+    ];
+
+    /* ---- State ---- */
+    let allBookmarks = [];
+    let categories = {};
+    let searchQuery = '';
+    let isDarkMode = null;  // null = follow system, true = dark, false = light
+
+    /* ---- DOM Refs ---- */
+    const $ = function(id) { return document.getElementById(id); };
+
+    const dom = {
+      searchInput:       $('searchInput'),
+      searchClearBtn:    $('searchClear'),
+      searchResults:     $('searchResults'),
+      searchResultsList: $('searchResultsList'),
+      categorySection:   $('categorySection'),
+      categoryGrid:      $('categoryGrid'),
+      categoryCount:     $('categoryCount'),
+      emptyState:        $('emptyState'),
+      statsText:         $('statsText'),
+      suggestionsPanel:  $('suggestionsPanel'),
+      suggestionsList:   $('suggestionsList'),
+      aiOrganizeBtn:     $('aiOrganizeBtn'),
+      exportBtn:         $('exportBtn'),
+      darkModeToggle:    $('darkModeToggle'),
+      sunIcon:           $('sunIcon'),
+      moonIcon:          $('moonIcon'),
+      dismissSuggestions:$('dismissSuggestions'),
+      addBookmarkBtn:    $('addBookmarkBtn'),
+      importBtn:         $('importBtn'),
+      importFileInput:   $('importFileInput'),
+      addModal:          $('addModal'),
+      addTitle:          $('addTitle'),
+      addUrl:            $('addUrl'),
+      addFolder:         $('addFolder'),
+      addSubmit:         $('addSubmit'),
+      addCancel:         $('addCancel'),
+      emptyAddBtn:       $('emptyAddBtn'),
+      emptyImportBtn:    $('emptyImportBtn'),
+    };
+
+    /* ---- Utilities ---- */
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function extractDomainSimple(url) {
+      try { return new URL(url).hostname.replace(/^www\./, ''); }
+      catch {
+        const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^\/:]+)/i);
+        return match ? match[1] : '';
+      }
+    }
+
+    function debounce(fn, delay) {
+      let timer;
+      return function () { clearTimeout(timer); timer = setTimeout(fn, delay); };
+    }
+
+    function generateId() {
+      return 'bm_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function normalizeUrl(url) {
+      if (!url) return url;
+      url = url.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        url = 'https://' + url;
+      }
+      return url;
+    }
+
+    /* ---- Dark Mode ---- */
+    function loadDarkMode() {
+      const stored = localStorage.getItem('tabflow_darkmode');
+      if (stored === 'true') { isDarkMode = true; }
+      else if (stored === 'false') { isDarkMode = false; }
+      else { isDarkMode = null; }
+      applyDarkMode();
+    }
+
+    function saveDarkMode() {
+      if (isDarkMode === null) {
+        localStorage.removeItem('tabflow_darkmode');
+      } else {
+        localStorage.setItem('tabflow_darkmode', String(isDarkMode));
+      }
+    }
+
+    function applyDarkMode() {
+      document.body.classList.remove('dark', 'light');
+      if (isDarkMode === true) { document.body.classList.add('dark'); }
+      else if (isDarkMode === false) { document.body.classList.add('light'); }
+      updateDarkModeIcon();
+    }
+
+    function updateDarkModeIcon() {
+      const isDark = isDarkMode === true ||
+        (isDarkMode === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) {
+        dom.sunIcon.classList.add('hidden');
+        dom.moonIcon.classList.remove('hidden');
+      } else {
+        dom.sunIcon.classList.remove('hidden');
+        dom.moonIcon.classList.add('hidden');
+      }
+    }
+
+    function toggleDarkMode() {
+      if (isDarkMode === null) { isDarkMode = true; }
+      else if (isDarkMode === true) { isDarkMode = false; }
+      else { isDarkMode = null; }
+      applyDarkMode();
+      saveDarkMode();
+    }
+
+    /* ---- Bookmark Loading / Saving ---- */
+    function loadBookmarks() {
+      const stored = localStorage.getItem('tabflow_bookmarks');
+      if (stored) {
+        try {
+          allBookmarks = JSON.parse(stored);
+          if (!Array.isArray(allBookmarks)) allBookmarks = [];
+          return;
+        } catch (e) {
+          console.warn('TabFlow: corrupted bookmark data, resetting');
+        }
+      }
+      // First visit: seed with example bookmarks
+      allBookmarks = SEED_BOOKMARKS.map(function(b) { return Object.assign({}, b); });
+      saveBookmarks();
+    }
+
+    function saveBookmarks() {
+      localStorage.setItem('tabflow_bookmarks', JSON.stringify(allBookmarks));
+    }
+
+    /* ---- Categorization ---- */
+    function buildCategories() {
+      var cats = {};
+      for (var i = 0; i < allBookmarks.length; i++) {
+        var bm = allBookmarks[i];
+        var cat = bm.folder;
+        if (!cat || cat === 'Bookmarks bar' || cat === 'Other bookmarks' || cat === 'Bookmarks') {
+          cat = 'Uncategorized';
+        }
+        if (!cats[cat]) cats[cat] = [];
+        cats[cat].push(bm);
+      }
+      return cats;
+    }
+
+    /* ---- Rendering ---- */
+    function render() {
+      categories = buildCategories();
+      if (searchQuery.trim()) {
+        renderSearchResults();
+      } else {
+        renderCategoryView();
+      }
+      updateStats();
+    }
+
+    function updateStats() {
+      var total = allBookmarks.length;
+      var catCount = Object.keys(categories).length;
+      if (total === 0) {
+        dom.statsText.textContent = 'No bookmarks found.';
+      } else {
+        dom.statsText.textContent = total + ' bookmark' + (total !== 1 ? 's' : '') + ' across ' + catCount + ' categor' + (catCount !== 1 ? 'ies' : 'y');
+      }
+    }
+
+    function renderCategoryView() {
+      dom.searchResults.classList.add('hidden');
+      dom.categorySection.classList.remove('hidden');
+
+      var catNames = Object.keys(categories).sort(function(a, b) {
+        if (a === 'Uncategorized') return 1;
+        if (b === 'Uncategorized') return -1;
+        return categories[b].length - categories[a].length;
+      });
+
+      if (catNames.length === 0) {
+        dom.emptyState.classList.remove('hidden');
+        dom.categoryGrid.innerHTML = '';
+        dom.categoryCount.textContent = '';
+        return;
+      }
+
+      dom.emptyState.classList.add('hidden');
+      dom.categoryCount.textContent = catNames.length + ' categor' + (catNames.length !== 1 ? 'ies' : 'y');
+
+      dom.categoryGrid.innerHTML = catNames.map(function(name) {
+        var bookmarks = categories[name];
+
+        return '<div class="category-card" data-category="' + escapeHtml(name) + '">' +
+          '<div class="card-header">' +
+            '<span class="card-title">' + escapeHtml(name) + '</span>' +
+            '<span class="card-badge">' + bookmarks.length + '</span>' +
+          '</div>' +
+          '<ul class="card-list">' +
+            bookmarks.slice(0, 5).map(function(bm) {
+              return '<li class="card-list-item" data-url="' + escapeHtml(bm.url) + '" data-id="' + escapeHtml(bm.id) + '" title="' + escapeHtml(bm.title) + '">' +
+                '<img src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(extractDomainSimple(bm.url)) + '&sz=32" alt="" class="favicon" loading="lazy" onerror="this.style.display=\'none\'">' +
+                '<span class="bm-title">' + escapeHtml(bm.title) + '</span>' +
+                '<button class="bm-delete" title="Delete bookmark" data-id="' + escapeHtml(bm.id) + '">&times;</button>' +
+              '</li>';
+            }).join('') +
+          '</ul>' +
+          (bookmarks.length > 5
+            ? '<div class="card-more"><span class="card-more-link">+' + (bookmarks.length - 5) + ' more</span></div>'
+            : '') +
+        '</div>';
+      }).join('');
+
+      // Attach click handlers to bookmark items (navigate)
+      dom.categoryGrid.querySelectorAll('.card-list-item').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          // Don't navigate if the delete button was clicked
+          if (e.target.classList.contains('bm-delete')) return;
+          var url = el.dataset.url;
+          if (url) window.open(url, '_blank');
+        });
+      });
+
+      // Attach delete handlers
+      dom.categoryGrid.querySelectorAll('.bm-delete').forEach(function(el) {
+        el.addEventListener('click', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          deleteBookmark(el.dataset.id);
+        });
+      });
+    }
+
+    function renderSearchResults() {
+      dom.categorySection.classList.add('hidden');
+      dom.searchResults.classList.remove('hidden');
+      dom.emptyState.classList.add('hidden');
+
+      var q = searchQuery.toLowerCase().trim();
+      var results = allBookmarks.filter(function(bm) {
+        return bm.title.toLowerCase().indexOf(q) !== -1 ||
+               bm.url.toLowerCase().indexOf(q) !== -1 ||
+               (bm.folder && bm.folder.toLowerCase().indexOf(q) !== -1);
+      });
+
+      if (results.length === 0) {
+        dom.searchResultsList.innerHTML =
+          '<div class="empty-state"><p>No bookmarks matching "' + escapeHtml(q) + '"</p></div>';
+        return;
+      }
+
+      dom.searchResultsList.innerHTML = results.slice(0, 100).map(function(bm) {
+        var domain = extractDomainSimple(bm.url);
+        return '<div class="bookmark-item" data-url="' + escapeHtml(bm.url) + '">' +
+          '<img src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=32" alt="" class="favicon" loading="lazy" onerror="this.style.display=\'none\'">' +
+          '<div class="bm-info">' +
+            '<div class="bm-title">' + highlightMatch(bm.title, q) + '</div>' +
+            '<div class="bm-url">' + highlightMatch(domain, q) + '</div>' +
+          '</div>' +
+          (bm.folder ? '<span class="bm-tag">' + escapeHtml(bm.folder) + '</span>' : '') +
+        '</div>';
+      }).join('');
+
+      dom.searchResultsList.querySelectorAll('.bookmark-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var url = el.dataset.url;
+          if (url) window.open(url, '_blank');
+        });
+      });
+    }
+
+    function highlightMatch(text, query) {
+      if (!query) return escapeHtml(text);
+      var escaped = escapeHtml(text);
+      var qEscaped = escapeHtml(query);
+      var regex = new RegExp('(' + qEscaped.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+      return escaped.replace(regex, '<mark>$1</mark>');
+    }
+
+    /* ---- CRUD: Add Bookmark ---- */
+    function showAddModal() {
+      dom.addModal.classList.remove('hidden');
+      dom.addTitle.value = '';
+      dom.addUrl.value = '';
+      dom.addFolder.value = '';
+      dom.addTitle.focus();
+    }
+
+    function hideAddModal() {
+      dom.addModal.classList.add('hidden');
+    }
+
+    function addBookmark() {
+      var title = dom.addTitle.value.trim();
+      var rawUrl = dom.addUrl.value.trim();
+      var folder = dom.addFolder.value.trim();
+
+      if (!title) { dom.addTitle.focus(); return; }
+      if (!rawUrl) { dom.addUrl.focus(); return; }
+
+      var url = normalizeUrl(rawUrl);
+
+      var bm = {
+        id: generateId(),
+        title: title,
+        url: url,
+        dateAdded: Date.now(),
+        folder: folder || null
+      };
+
+      allBookmarks.unshift(bm);
+      saveBookmarks();
+      hideAddModal();
+      render();
+    }
+
+    /* ---- CRUD: Delete Bookmark ---- */
+    function deleteBookmark(id) {
+      allBookmarks = allBookmarks.filter(function(bm) { return bm.id !== id; });
+      saveBookmarks();
+      render();
+    }
+
+    /* ---- Import ---- */
+    function triggerImport() {
+      dom.importFileInput.click();
+    }
+
+    function handleImportFile(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var data = JSON.parse(e.target.result);
+          var imported = [];
+
+          if (Array.isArray(data)) {
+            // Check if it's a Chrome bookmark tree (has children) or TabFlow flat array
+            if (data.length > 0 && data[0].children) {
+              // Chrome bookmark tree format
+              imported = flattenChromeTree(data);
+            } else {
+              // TabFlow flat array format
+              imported = data.filter(function(item) { return item.url; });
+            }
+          }
+
+          if (imported.length === 0) {
+            alert('No bookmarks found in the file. Make sure it is a valid Chrome bookmarks export or TabFlow JSON export.');
+            return;
+          }
+
+          // Merge: add new bookmarks, skip duplicates by URL
+          var existingUrls = {};
+          allBookmarks.forEach(function(bm) { existingUrls[bm.url] = true; });
+
+          var added = 0;
+          imported.forEach(function(bm) {
+            if (!existingUrls[bm.url]) {
+              allBookmarks.push({
+                id: bm.id || generateId(),
+                title: bm.title || 'Untitled',
+                url: bm.url,
+                dateAdded: bm.dateAdded || Date.now(),
+                folder: bm.folder || null
+              });
+              existingUrls[bm.url] = true;
+              added++;
+            }
+          });
+
+          saveBookmarks();
+          render();
+          alert('Imported ' + added + ' new bookmark' + (added !== 1 ? 's' : '') + '. ' +
+                (imported.length - added) + ' duplicate' + (imported.length - added !== 1 ? 's' : '') + ' skipped.');
+        } catch (err) {
+          console.error('TabFlow: import failed', err);
+          alert('Import failed. The file may not be valid JSON.');
+        }
+      };
+      reader.readAsText(file);
+      // Reset so the same file can be re-imported
+      event.target.value = '';
+    }
+
+    function flattenChromeTree(tree) {
+      var result = [];
+      function walk(nodes, parentFolder) {
+        for (var i = 0; i < nodes.length; i++) {
+          var node = nodes[i];
+          if (node.children) {
+            walk(node.children, node.title);
+          } else if (node.url) {
+            result.push({
+              id: node.id || generateId(),
+              title: node.title || 'Untitled',
+              url: node.url,
+              dateAdded: node.dateAdded,
+              folder: parentFolder || null
+            });
+          }
+        }
+      }
+      walk(tree, null);
+      return result;
+    }
+
+    /* ---- AI Organize ---- */
+    function runAIOrganize() {
+      dom.aiOrganizeBtn.disabled = true;
+      dom.aiOrganizeBtn.innerHTML = '<span class="spinner"></span> Organizing...';
+
+      try {
+        var tags = categorizeAll(allBookmarks);
+
+        // Build suggestions grouped by category
+        var byCategory = {};
+        for (var id in tags) {
+          if (!tags.hasOwnProperty(id)) continue;
+          var result = tags[id];
+          var cat = result.category;
+          if (!byCategory[cat]) byCategory[cat] = [];
+          var bm = findBookmarkById(id);
+          if (bm) {
+            byCategory[cat].push({ id: bm.id, title: bm.title, url: bm.url, confidence: result.confidence });
+          }
+        }
+
+        renderSuggestions(byCategory);
+        dom.aiOrganizeBtn.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">' +
+            '<path d="M20 6L9 17l-5-5"/>' +
+          '</svg> Organized';
+        setTimeout(function() {
+          dom.aiOrganizeBtn.innerHTML =
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">' +
+              '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>' +
+            '</svg> AI Organize';
+          dom.aiOrganizeBtn.disabled = false;
+        }, 2000);
+      } catch (err) {
+        console.error('TabFlow: AI organize failed', err);
+        dom.aiOrganizeBtn.innerHTML = 'AI Organize';
+        dom.aiOrganizeBtn.disabled = false;
+      }
+    }
+
+    function findBookmarkById(id) {
+      for (var i = 0; i < allBookmarks.length; i++) {
+        if (allBookmarks[i].id === id) return allBookmarks[i];
+      }
+      return null;
+    }
+
+    function renderSuggestions(byCategory) {
+      dom.suggestionsPanel.classList.remove('hidden');
+
+      var catNames = Object.keys(byCategory).sort(function(a, b) {
+        if (a === 'Uncategorized') return 1;
+        if (b === 'Uncategorized') return -1;
+        return byCategory[b].length - byCategory[a].length;
+      });
+
+      dom.suggestionsList.innerHTML = catNames.map(function(cat) {
+        var items = byCategory[cat];
+        return '<div style="margin-bottom:16px">' +
+          '<div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;color:var(--text-primary)">' +
+            escapeHtml(cat) + ' <span class="card-badge">' + items.length + '</span>' +
+          '</div>' +
+          items.slice(0, 8).map(function(bm) {
+            var confOpacity = bm.confidence === 'high' ? '1' : bm.confidence === 'medium' ? '0.7' : '0.5';
+            return '<div class="bookmark-item" data-url="' + escapeHtml(bm.url) + '">' +
+              '<img src="https://www.google.com/s2/favicons?domain=' + encodeURIComponent(extractDomainSimple(bm.url)) + '&sz=32" alt="" class="favicon" loading="lazy" onerror="this.style.display=\'none\'">' +
+              '<div class="bm-info">' +
+                '<div class="bm-title">' + escapeHtml(bm.title) + '</div>' +
+                '<div class="bm-url">' + escapeHtml(extractDomainSimple(bm.url)) + '</div>' +
+              '</div>' +
+              '<span class="bm-tag" style="opacity:' + confOpacity + '">' + bm.confidence + '</span>' +
+            '</div>';
+          }).join('') +
+          (items.length > 8 ? '<div style="font-size:0.8rem;color:var(--text-tertiary);padding:4px 14px">+' + (items.length - 8) + ' more...</div>' : '') +
+        '</div>';
+      }).join('');
+
+      dom.suggestionsList.querySelectorAll('.bookmark-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+          var url = el.dataset.url;
+          if (url) window.open(url, '_blank');
+        });
+      });
+    }
+
+    /* ---- Export ---- */
+    function exportBookmarks() {
+      var json = JSON.stringify(allBookmarks, null, 2);
+      var blob = new Blob([json], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'tabflow-export-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ---- Event Bindings ---- */
+    function bindEvents() {
+      // Search
+      dom.searchInput.addEventListener('input', debounce(function() {
+        searchQuery = dom.searchInput.value;
+        if (searchQuery.trim()) {
+          dom.searchClearBtn.classList.remove('hidden');
+        } else {
+          dom.searchClearBtn.classList.add('hidden');
+        }
+        render();
+      }, 150));
+
+      dom.searchClearBtn.addEventListener('click', function() {
+        dom.searchInput.value = '';
+        searchQuery = '';
+        dom.searchClearBtn.classList.add('hidden');
+        dom.searchInput.focus();
+        render();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && searchQuery) {
+          dom.searchInput.value = '';
+          searchQuery = '';
+          dom.searchClearBtn.classList.add('hidden');
+          render();
+          dom.searchInput.blur();
+        }
+        // Also close modal on Escape
+        if (e.key === 'Escape' && !dom.addModal.classList.contains('hidden')) {
+          hideAddModal();
+        }
+      });
+
+      // AI Organize
+      dom.aiOrganizeBtn.addEventListener('click', runAIOrganize);
+
+      // Export
+      dom.exportBtn.addEventListener('click', exportBookmarks);
+
+      // Dark mode toggle
+      dom.darkModeToggle.addEventListener('click', toggleDarkMode);
+
+      // Add bookmark
+      dom.addBookmarkBtn.addEventListener('click', showAddModal);
+      dom.addCancel.addEventListener('click', hideAddModal);
+      dom.addSubmit.addEventListener('click', addBookmark);
+      dom.addUrl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') addBookmark();
+      });
+      dom.addTitle.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { dom.addUrl.focus(); }
+      });
+
+      // Close modal on overlay click
+      dom.addModal.addEventListener('click', function(e) {
+        if (e.target === dom.addModal) hideAddModal();
+      });
+
+      // Import
+      dom.importBtn.addEventListener('click', triggerImport);
+      dom.importFileInput.addEventListener('change', handleImportFile);
+
+      // Empty state buttons
+      dom.emptyAddBtn.addEventListener('click', showAddModal);
+      dom.emptyImportBtn.addEventListener('click', triggerImport);
+
+      // Dismiss suggestions
+      dom.dismissSuggestions.addEventListener('click', function() {
+        dom.suggestionsPanel.classList.add('hidden');
+      });
+
+      // System color scheme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function() {
+        if (isDarkMode === null) updateDarkModeIcon();
+      });
+    }
+
+    /* ---- Init ---- */
+    function init() {
+      loadDarkMode();
+      loadBookmarks();
+      bindEvents();
+      render();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  })();
+  </script>
+
+  <!-- Analytics ping (privacy-first, no cookies) -->
+  <script>
+  (function(){
+    var d=document.referrer||'direct';
+    var s=screen.width+'x'+screen.height;
+    new Image().src='https://api.countapi.xyz/hit/selfloom.github.io/tabflow/app.html/visits?ref='+encodeURIComponent(d)+'&res='+s;
+  })();
+  </script>
+</body>
+</html>
