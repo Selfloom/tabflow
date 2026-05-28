@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TabFlow — AI Bookmark Dashboard for Chrome | Replace Your New Tab</title>
+<meta name="description" content="TabFlow replaces Chrome's broken new tab with a clean, AI-organized bookmark dashboard. No accounts. No cloud. Local storage. Free forever.">
+<meta property="og:title" content="TabFlow — AI Bookmark Dashboard for Chrome">
+<meta property="og:description" content="Replace Chrome's broken new tab with a clean, AI-organized bookmark dashboard. No accounts. No cloud. Your data stays on your machine.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="./tabflow-og.png">
+<meta property="og:url" content="https://selfloom.ai/tabflow">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="TabFlow — AI Bookmark Dashboard for Chrome">
+<meta name="twitter:description" content="Replace Chrome's broken new tab with a clean, AI-organized bookmark dashboard. No accounts. No cloud. Free forever.">
+<meta name="twitter:image" content="./tabflow-og.png">
+<style>
+/* ===== RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:linear-gradient(180deg,#090d1a 0%,#0d1225 40%,#0d1225 100%);color:#e2e8f0;line-height:1.6;min-height:100vh;overflow-x:hidden}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:inherit;border:none}
+input{font-family:inherit;font-size:inherit}
+
+:root{
+  --bg:#0d1225;--bg-card:#151b30;--bg-input:#1e2744;--border:#2d3a5c;
+  --text:#f1f5f9;--text-muted:#94a3b8;--text-dim:#64748b;
+  --primary:#6366f1;--primary-hover:#818cf8;--primary-bg:rgba(99,102,241,0.15);
+  --accent:#22d3ee;--accent-bg:rgba(34,211,238,0.12);
+  --success:#34d399;--danger:#f87171;--warning:#fbbf24;
+  --radius:14px;--radius-sm:8px;
+}
+::selection{background:var(--primary-bg);color:var(--primary-hover)}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glow{0%,100%{box-shadow:0 4px 20px rgba(99,102,241,0.25)}50%{box-shadow:0 4px 40px rgba(99,102,241,0.5)}}
+
+/* ===== LAYOUT ===== */
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+.section{padding:72px 0}
+
+/* ===== NAV ===== */
+.nav{position:sticky;top:0;z-index:100;background:rgba(9,13,26,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(45,58,92,0.4)}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-size:1.35rem;font-weight:800;letter-spacing:-0.5px;color:var(--text);display:flex;align-items:center;gap:8px}
+.nav-logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--primary),#8b5cf6);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.9rem}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{font-size:0.88rem;font-weight:500;color:var(--text-muted);transition:color .15s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:var(--primary);color:#fff;border-radius:var(--radius-sm);font-weight:600;font-size:0.88rem;transition:all .2s;text-decoration:none}
+.nav-cta:hover{background:var(--primary-hover);transform:translateY(-1px);box-shadow:0 4px 16px rgba(99,102,241,0.35)}
+
+/* ===== SECTION HEADERS ===== */
+.section-header{text-align:center;margin-bottom:52px}
+.section-header .label{display:inline-block;padding:6px 16px;background:var(--primary-bg);color:var(--primary-hover);border-radius:20px;font-size:0.82rem;font-weight:500;margin-bottom:16px;border:1px solid rgba(99,102,241,0.25);text-transform:uppercase;letter-spacing:0.5px}
+.section-header h2{font-size:2rem;font-weight:700;margin-bottom:12px;letter-spacing:-0.3px}
+.section-header p{color:var(--text-muted);max-width:560px;margin:0 auto;font-size:1.05rem;line-height:1.7}
+
+/* ===== HERO ===== */
+.hero{padding:80px 0 40px;text-align:center;position:relative;overflow:hidden}
+.hero::before{
+  content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:700px;height:700px;background:radial-gradient(circle,rgba(99,102,241,0.07) 0%,transparent 65%);pointer-events:none
+}
+.hero::after{
+  content:'';position:absolute;top:40%;right:-200px;
+  width:400px;height:400px;background:radial-gradient(circle,rgba(34,211,238,0.05) 0%,transparent 60%);pointer-events:none
+}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:7px 18px;background:var(--primary-bg);color:var(--primary-hover);border-radius:20px;font-size:0.85rem;font-weight:500;margin-bottom:24px;border:1px solid rgba(99,102,241,0.3)}
+.hero-badge .new-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:glow 2s ease infinite}
+.hero h1{font-size:clamp(2.2rem,4.5vw,3.4rem);font-weight:800;line-height:1.15;margin-bottom:20px;letter-spacing:-0.5px}
+.hero h1 .gradient-text{background:linear-gradient(135deg,var(--primary-hover),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-subtitle{font-size:1.15rem;color:var(--text-muted);max-width:620px;margin:0 auto 36px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:40px}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:15px 32px;background:var(--primary);color:#fff;border-radius:var(--radius-sm);font-weight:700;font-size:1.05rem;text-decoration:none;transition:all .2s;box-shadow:0 2px 16px rgba(99,102,241,0.3)}
+.btn-primary:hover{background:var(--primary-hover);transform:translateY(-2px);box-shadow:0 6px 28px rgba(99,102,241,0.45)}
+.btn-outline-lg{display:inline-flex;align-items:center;gap:8px;padding:15px 32px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-sm);font-weight:600;font-size:1.05rem;text-decoration:none;transition:all .2s}
+.btn-outline-lg:hover{background:var(--bg-card);color:var(--text);border-color:var(--primary)}
+.hero-social-proof{margin-top:28px;font-size:0.85rem;color:var(--text-dim);display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.hero-social-proof span{color:var(--text-muted)}
+.hero-social-proof .sep{color:var(--text-dim)}
+
+/* ===== HERO MAC WINDOW (demo preview) ===== */
+.hero-window{margin-top:48px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 48px rgba(0,0,0,0.5);background:var(--bg);max-width:900px;margin-left:auto;margin-right:auto;transform:perspective(1000px) rotateX(2deg);transition:transform .4s}
+.hero-window:hover{transform:perspective(1000px) rotateX(0)}
+.window-toolbar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#111827;border-bottom:1px solid var(--border)}
+.window-dot{width:11px;height:11px;border-radius:50%}
+.window-dot.red{background:#f87171}
+.window-dot.yellow{background:#fbbf24}
+.window-dot.green{background:#34d399}
+.window-address{flex:1;padding:5px 14px;background:var(--bg);border-radius:16px;font-size:0.76rem;color:var(--text-dim);text-align:center;margin:0 12px}
+.window-body{display:grid;grid-template-columns:220px 1fr;min-height:340px}
+@media(max-width:700px){.window-body{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+.window-sidebar{background:#111827;padding:16px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;font-size:0.82rem;color:var(--text-muted);transition:all .1s}
+.sidebar-item.active{background:var(--primary-bg);color:var(--primary-hover)}
+.sidebar-item .icon{font-size:0.9rem;width:20px;text-align:center}
+.window-main{padding:20px;display:flex;flex-direction:column;gap:10px}
+.window-card{background:var(--bg-card);border-radius:8px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;gap:12px;transition:all .15s;font-size:0.85rem}
+.window-card:hover{border-color:var(--primary)}
+.window-card .favicon{width:20px;height:20px;border-radius:4px;flex-shrink:0}
+.window-card .card-info{flex:1;min-width:0}
+.window-card .card-title{font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.window-card .card-url{font-size:0.74rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.window-card .card-tag{display:inline-block;padding:2px 8px;background:var(--primary-bg);color:var(--primary-hover);border-radius:10px;font-size:0.68rem;font-weight:600;flex-shrink:0}
+.window-card:nth-child(2) .card-tag{background:rgba(34,211,238,0.12);color:var(--accent)}
+.window-card:nth-child(3) .card-tag{background:rgba(139,92,246,0.12);color:#a78bfa}
+.window-card:nth-child(4) .card-tag{background:rgba(251,191,36,0.12);color:var(--warning)}
+
+/* ===== WHY TABFLOW ===== */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.why-card{background:var(--bg-card);border-radius:var(--radius);padding:28px;border:1px solid var(--border);position:relative;overflow:hidden}
+.why-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px
+}
+.why-card.pain::before{background:linear-gradient(90deg,var(--danger),#fb923c)}
+.why-card.risk::before{background:linear-gradient(90deg,#fb923c,var(--warning))}
+.why-card.cost::before{background:linear-gradient(90deg,var(--warning),var(--accent))}
+.why-icon{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:16px}
+.why-icon.pain{background:rgba(248,113,113,0.12);color:var(--danger)}
+.why-icon.risk{background:rgba(251,191,36,0.12);color:var(--warning)}
+.why-icon.cost{background:rgba(34,211,238,0.12);color:var(--accent)}
+.why-card h3{font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.why-card p{color:var(--text-muted);font-size:0.92rem;line-height:1.65}
+.why-card .why-stat{display:inline-block;margin-top:12px;padding:4px 10px;border-radius:10px;font-size:0.76rem;font-weight:600}
+.why-card.pain .why-stat{background:rgba(248,113,113,0.1);color:var(--danger)}
+.why-card.risk .why-stat{background:rgba(251,191,36,0.1);color:var(--warning)}
+.why-card.cost .why-stat{background:rgba(34,211,238,0.1);color:var(--accent)}
+
+/* ===== FEATURES GRID ===== */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.feature-card{background:var(--bg-card);border-radius:var(--radius);padding:28px;border:1px solid var(--border);transition:all .25s;position:relative;overflow:hidden}
+.feature-card:hover{border-color:var(--primary);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.35)}
+.feature-card:hover::after{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:radial-gradient(circle at 50% 0%,rgba(99,102,241,0.06),transparent 60%);pointer-events:none
+}
+.feature-icon{width:44px;height:44px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:16px}
+.feature-icon.indigo{background:var(--primary-bg);color:var(--primary-hover)}
+.feature-icon.cyan{background:var(--accent-bg);color:var(--accent)}
+.feature-icon.purple{background:rgba(139,92,246,0.12);color:#a78bfa}
+.feature-icon.green{background:rgba(52,211,153,0.12);color:var(--success)}
+.feature-icon.amber{background:rgba(251,191,36,0.12);color:var(--warning)}
+.feature-icon.rose{background:rgba(251,113,133,0.12);color:#fb7185}
+.feature-card h3{font-size:1.08rem;font-weight:600;margin-bottom:8px}
+.feature-card p{color:var(--text-muted);font-size:0.9rem;line-height:1.6}
+
+/* ===== COMPARISON TABLE ===== */
+.comparison-wrapper{max-width:900px;margin:0 auto}
+.comparison-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--bg-card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.comparison-table thead th{
+  text-align:left;padding:14px 20px;font-size:0.82rem;text-transform:uppercase;letter-spacing:0.5px;
+  color:var(--text-dim);border-bottom:1px solid var(--border);background:rgba(0,0,0,0.2)
+}
+.comparison-table thead th:first-child{color:var(--text-muted);font-weight:600}
+.comparison-table thead th.highlight{color:var(--primary-hover);font-weight:700}
+.comparison-table tbody td{
+  padding:14px 20px;font-size:0.88rem;border-bottom:1px solid rgba(45,58,92,0.5);
+  color:var(--text-muted);transition:background .15s
+}
+.comparison-table tbody tr:hover td{background:rgba(99,102,241,0.04)}
+.comparison-table tbody td:first-child{color:var(--text);font-weight:500}
+.comparison-table tbody td.highlight{color:var(--primary-hover);font-weight:600}
+.comparison-table .check{color:var(--success);font-weight:700}
+.comparison-table .cross{color:var(--text-dim)}
+.comparison-table .label{display:inline-block;padding:2px 8px;background:rgba(99,102,241,0.08);color:var(--primary-hover);border-radius:8px;font-size:0.75rem;font-weight:600}
+.comparison-table tbody tr:last-child td{border-bottom:none}
+
+/* ===== STEPS ===== */
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:900px;margin:0 auto}
+.step-card{background:var(--bg-card);border-radius:var(--radius);padding:28px;border:1px solid var(--border);text-align:center;position:relative}
+.step-card:not(:last-child)::after{
+  content:'';position:absolute;right:-12px;top:50%;width:24px;height:2px;background:var(--border)
+}
+@media(max-width:768px){.step-card:not(:last-child)::after{display:none}}
+.step-number{width:44px;height:44px;border-radius:50%;background:var(--primary-bg);color:var(--primary-hover);display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;margin:0 auto 16px;border:2px solid rgba(99,102,241,0.25)}
+.step-card h3{font-size:1.05rem;font-weight:600;margin-bottom:6px}
+.step-card p{color:var(--text-muted);font-size:0.9rem;line-height:1.6}
+.step-card code{display:inline-block;margin-top:10px;padding:4px 12px;background:var(--bg-input);border-radius:4px;font-size:0.82rem;color:var(--accent);font-family:'SF Mono','Cascadia Code','Consolas',monospace}
+
+/* ===== PRICING ===== */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;max-width:800px;margin:0 auto}
+.pricing-card{background:var(--bg-card);border-radius:var(--radius);padding:32px;border:1px solid var(--border);position:relative;transition:all .2s}
+.pricing-card:hover{border-color:var(--primary)}
+.pricing-card.featured{border-color:var(--primary);border-width:2px;background:linear-gradient(135deg,var(--bg-card),#191f3a)}
+.pricing-card.featured::before{
+  content:'BEST VALUE';position:absolute;top:-12px;right:24px;
+  padding:4px 12px;background:var(--primary);color:#fff;border-radius:12px;font-size:0.7rem;font-weight:700;letter-spacing:0.5px
+}
+.pricing-name{font-size:1.2rem;font-weight:700;margin-bottom:8px}
+.pricing-price{font-size:2.8rem;font-weight:800;letter-spacing:-1px;margin-bottom:4px;line-height:1}
+.pricing-price span{font-size:0.95rem;font-weight:400;color:var(--text-muted)}
+.pricing-desc{color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;line-height:1.5}
+.pricing-features{list-style:none;margin-bottom:24px}
+.pricing-features li{padding:8px 0;color:var(--text-muted);font-size:0.88rem;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid rgba(45,58,92,0.4)}
+.pricing-features li:last-child{border-bottom:none}
+.pricing-features .check{color:var(--success);font-weight:700;flex-shrink:0}
+.pricing-features .dash{color:var(--text-dim);flex-shrink:0}
+.pricing-btn{display:block;width:100%;padding:14px;border-radius:var(--radius-sm);font-weight:700;font-size:1rem;text-align:center;transition:all .2s;text-decoration:none;cursor:pointer}
+.pricing-btn.primary{background:var(--primary);color:#fff;border:none}
+.pricing-btn.primary:hover{background:var(--primary-hover);transform:translateY(-1px);box-shadow:0 6px 20px rgba(99,102,241,0.35)}
+.pricing-btn.outline{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+.pricing-btn.outline:hover{background:var(--bg-input);color:var(--text);border-color:var(--primary)}
+
+/* ===== CTA BANNER ===== */
+.cta-banner{background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15));border-radius:var(--radius);padding:52px 36px;text-align:center;max-width:700px;margin:0 auto;border:1px solid rgba(99,102,241,0.3);position:relative;overflow:hidden}
+.cta-banner::before{
+  content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(34,211,238,0.1),transparent 70%);pointer-events:none
+}
+.cta-banner h2{font-size:1.8rem;font-weight:700;color:#fff;margin-bottom:12px;letter-spacing:-0.3px}
+.cta-banner p{color:#c7d2fe;font-size:1.05rem;margin-bottom:28px;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.6}
+.cta-banner .btn-white{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;background:#fff;color:#312e81;border-radius:var(--radius-sm);font-weight:700;font-size:1.08rem;text-decoration:none;transition:all .2s}
+.cta-banner .btn-white:hover{background:#e0e7ff;transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.35)}
+.cta-banner .btn-white-sub{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:var(--radius-sm);font-weight:600;font-size:1.08rem;text-decoration:none;transition:all .2s;margin-left:12px}
+.cta-banner .btn-white-sub:hover{background:rgba(255,255,255,0.16)}
+.cta-banner .cta-caption{color:rgba(199,210,254,0.7);font-size:0.85rem;margin-top:16px}
+.cta-banner .cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ===== PRIVACY NOTE ===== */
+.privacy-note{max-width:600px;margin:0 auto;text-align:center}
+.privacy-note .shield{font-size:2rem;margin-bottom:12px}
+.privacy-note h3{font-size:1.2rem;font-weight:600;margin-bottom:8px}
+.privacy-note p{color:var(--text-muted);font-size:0.92rem;line-height:1.6}
+
+/* ===== FOOTER ===== */
+.footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:var(--text-dim);font-size:0.85rem}
+.footer-logo{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.footer-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.footer-links a{color:var(--text-muted);transition:color .15s;font-size:0.85rem}
+.footer-links a:hover{color:var(--primary-hover)}
+.footer-sep{color:var(--text-dim)}
+.footer-legal{margin-top:12px;font-size:0.78rem;color:var(--text-dim);line-height:1.6;max-width:520px;margin-left:auto;margin-right:auto}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .hero{padding:50px 0 30px}
+  .hero h1{font-size:1.9rem}
+  .hero-subtitle{font-size:1rem}
+  .hero-actions{flex-direction:column;align-items:center}
+  .hero-actions .btn-primary,.hero-actions .btn-outline-lg{width:100%;justify-content:center}
+  .nav-links{display:none}
+  .btn-primary,.btn-outline-lg{padding:13px 28px;font-size:0.95rem}
+  .section{padding:48px 0}
+  .section-header h2{font-size:1.55rem}
+  .features-grid,.why-grid,.steps-grid{grid-template-columns:1fr}
+  .pricing-grid{grid-template-columns:1fr}
+  .cta-banner{padding:36px 20px}
+  .cta-banner h2{font-size:1.4rem}
+  .cta-banner .cta-actions{flex-direction:column;align-items:center}
+  .cta-banner .btn-white-sub{margin-left:0;margin-top:12px}
+  .comparison-table thead th,.comparison-table tbody td{padding:10px 14px;font-size:0.8rem}
+  .window-body{grid-template-columns:1fr}
+  .window-sidebar{flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}
+  .sidebar-item{flex-shrink:0}
+}
+
+/* ===== ANIMATE-ON-SCROLL UTILITY ===== */
+.animate-up{animation:fadeUp .7s ease forwards}
+.animate-up:nth-child(1){animation-delay:0s}
+.animate-up:nth-child(2){animation-delay:.08s}
+.animate-up:nth-child(3){animation-delay:.16s}
+.animate-up:nth-child(4){animation-delay:.24s}
+.animate-up:nth-child(5){animation-delay:.32s}
+.animate-up:nth-child(6){animation-delay:.4s}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <div class="nav-logo-icon">T</div>
+      TabFlow
+    </a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#compare">Compare</a>
+      <a href="#install">Install</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a href="#download" class="nav-cta">Get TabFlow</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-badge">
+      <span class="new-dot"></span> Chrome 148 broke bookmarks — we fixed it
+    </div>
+    <h1>Your Bookmarks, Finally <span class="gradient-text">Organized by AI</span></h1>
+    <p class="hero-subtitle">
+      TabFlow replaces Chrome's broken new tab with a clean, AI-organized bookmark dashboard.
+      No accounts. No cloud. No monthly fees. Just your bookmarks, beautifully organized, right where you left them.
+    </p>
+    <div class="hero-actions">
+      <a href="#download" class="btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download TabFlow
+      </a>
+      <a href="#features" class="btn-outline-lg">See Features</a>
+    </div>
+    <div class="hero-social-proof">
+      <span>Chrome extension</span> <span class="sep">&bull;</span>
+      <span>Zero dependencies</span> <span class="sep">&bull;</span>
+      <span>100% local storage</span> <span class="sep">&bull;</span>
+      <span>Free forever</span>
+    </div>
+
+    <!-- Demo Preview Window -->
+    <div class="hero-window">
+      <div class="window-toolbar">
+        <div class="window-dot red"></div>
+        <div class="window-dot yellow"></div>
+        <div class="window-dot green"></div>
+        <div class="window-address">New Tab — TabFlow Dashboard</div>
+      </div>
+      <div class="window-body">
+        <div class="window-sidebar">
+          <div class="sidebar-item active"><span class="icon">T</span> All Bookmarks</div>
+          <div class="sidebar-item"><span class="icon">&lt;/&gt;</span> Development</div>
+          <div class="sidebar-item"><span class="icon">&#9654;</span> Media</div>
+          <div class="sidebar-item"><span class="icon">&#128717;</span> Shopping</div>
+          <div class="sidebar-item"><span class="icon">&#128218;</span> Research</div>
+          <div class="sidebar-item"><span class="icon">&#9881;</span> Settings</div>
+        </div>
+        <div class="window-main">
+          <div class="window-card">
+            <div class="favicon" style="background:#f05033"></div>
+            <div class="card-info">
+              <div class="card-title">GitHub — Where the world builds software</div>
+              <div class="card-url">github.com</div>
+            </div>
+            <span class="card-tag">Development</span>
+          </div>
+          <div class="window-card">
+            <div class="favicon" style="background:#1da1f2"></div>
+            <div class="card-info">
+              <div class="card-title">MDN Web Docs — Mozilla</div>
+              <div class="card-url">developer.mozilla.org</div>
+            </div>
+            <span class="card-tag">Reference</span>
+          </div>
+          <div class="window-card">
+            <div class="favicon" style="background:#8b5cf6"></div>
+            <div class="card-info">
+              <div class="card-title">Tailwind CSS Documentation</div>
+              <div class="card-url">tailwindcss.com</div>
+            </div>
+            <span class="card-tag">CSS</span>
+          </div>
+          <div class="window-card">
+            <div class="favicon" style="background:#fbbf24"></div>
+            <div class="card-info">
+              <div class="card-title">Hacker News</div>
+              <div class="card-url">news.ycombinator.com</div>
+            </div>
+            <span class="card-tag">News</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY TABFLOW -->
+<section class="section" id="why">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">The Problem</div>
+      <h2>Why TabFlow Exists</h2>
+      <p>Three reasons Chrome users are looking for a better bookmark experience right now.</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card pain animate-up">
+        <div class="why-icon pain">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h3>Chrome 148 Broke New Tabs</h3>
+        <p>The latest Chrome update forced the bookmarks bar onto every new tab page. You open a new tab expecting a clean slate and instead get a chaotic mess of links you saved six months ago.</p>
+        <span class="why-stat">700+ reports on Chrome bug tracker</span>
+      </div>
+      <div class="why-card risk animate-up">
+        <div class="why-icon risk">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h3>OneTab Keeps Losing Your Tabs</h3>
+        <p>OneTab is famous for one thing: losing all your saved tabs during a browser crash or update. Its fragile local storage has burned thousands of users who trusted it with their research sessions.</p>
+        <span class="why-stat">22K+ "lost tabs" complaints on Reddit</span>
+      </div>
+      <div class="why-card cost animate-up">
+        <div class="why-icon cost">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <h3>Raindrop.io Costs $3/Month</h3>
+        <p>The best bookmark manager on the market charges $3/month for basic features. That's $36/year just to organize your links. And your data lives on their servers, not yours.</p>
+        <span class="why-stat">$36/year &bull; cloud-only storage</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">Features</div>
+      <h2>Everything Your Bookmarks Deserve</h2>
+      <p>A complete bookmark dashboard. AI organization, instant search, dark mode, and more — all from your new tab.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card animate-up">
+        <div class="feature-icon indigo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <h3>New Tab Replacement</h3>
+        <p>TabFlow becomes your new tab page. Every time you open a new tab, you see your bookmarks organized by category — not the broken Chrome default.</p>
+      </div>
+      <div class="feature-card animate-up">
+        <div class="feature-icon purple">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <h3>AI Organize</h3>
+        <p>One-click auto-categorization. Bookmarks are automatically tagged into categories like Development, Media, Shopping, Research, and more using smart keyword matching.</p>
+      </div>
+      <div class="feature-card animate-up">
+        <div class="feature-icon cyan">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>Instant Search</h3>
+        <p>Find any bookmark by title or URL in milliseconds. Fuzzy matching means you don't need the exact name — just type what you remember, and TabFlow finds it.</p>
+      </div>
+      <div class="feature-card animate-up">
+        <div class="feature-icon indigo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </div>
+        <h3>Dark Mode</h3>
+        <p>System-aware dark mode that matches your OS preference, with a manual toggle if you want to switch anytime. Easy on the eyes, built for developers.</p>
+      </div>
+      <div class="feature-card animate-up">
+        <div class="feature-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <h3>JSON Export</h3>
+        <p>One-click export of your entire bookmark tree as a structured JSON file. Move your data anywhere, create backups, or integrate with other tools.</p>
+      </div>
+      <div class="feature-card animate-up">
+        <div class="feature-icon amber">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h3>Local Storage Only</h3>
+        <p>Everything stays on your machine using Chrome's storage.local API. Zero data sent to any server. No tracking. No accounts. Your bookmarks are yours alone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="section" id="compare">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">Comparison</div>
+      <h2>How TabFlow Stacks Up</h2>
+      <p>See how TabFlow compares against the most popular bookmark managers and tab savers.</p>
+    </div>
+    <div class="comparison-wrapper">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th class="highlight">TabFlow</th>
+            <th>Raindrop.io</th>
+            <th>Bookmark OS</th>
+            <th>OneTab</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Price</td>
+            <td class="highlight"><span class="label">Free + $4.99</span></td>
+            <td>$3/month</td>
+            <td>$3-5/month</td>
+            <td>Free</td>
+          </tr>
+          <tr>
+            <td>Account required</td>
+            <td class="highlight"><span class="check">&check; No</span></td>
+            <td><span class="cross">Yes</span></td>
+            <td><span class="cross">Yes</span></td>
+            <td><span class="check">No</span></td>
+          </tr>
+          <tr>
+            <td>New tab replacement</td>
+            <td class="highlight"><span class="check">&check; Yes</span></td>
+            <td><span class="cross">&times; No</span></td>
+            <td><span class="cross">&times; No</span></td>
+            <td><span class="cross">&times; No</span></td>
+          </tr>
+          <tr>
+            <td>AI organization</td>
+            <td class="highlight"><span class="check">&check; Local</span></td>
+            <td>Cloud AI</td>
+            <td>Cloud AI</td>
+            <td><span class="cross">&times; No</span></td>
+          </tr>
+          <tr>
+            <td>Data storage</td>
+            <td class="highlight"><span class="check">&check; Local only</span></td>
+            <td>Cloud</td>
+            <td>Cloud</td>
+            <td><span class="cross">Local (fragile)</span></td>
+          </tr>
+          <tr>
+            <td>Tab saving</td>
+            <td class="highlight">Bookmarks API</td>
+            <td>Manual</td>
+            <td>Manual</td>
+            <td>Auto-save tabs</td>
+          </tr>
+          <tr>
+            <td>Export your data</td>
+            <td class="highlight"><span class="check">&check; JSON export</span></td>
+            <td>CSV (Pro only)</td>
+            <td><span class="cross">&times; No</span></td>
+            <td><span class="cross">&times; No</span></td>
+          </tr>
+          <tr>
+            <td>Open source</td>
+            <td class="highlight"><span class="check">&check; MIT</span></td>
+            <td><span class="cross">&times; Proprietary</span></td>
+            <td><span class="cross">&times; Proprietary</span></td>
+            <td><span class="cross">&times; Proprietary</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="section" id="install">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">Installation</div>
+      <h2>Install in 30 Seconds</h2>
+      <p>No Chrome Web Store wait. No account signup. Just download, load, and start using it.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card animate-up">
+        <div class="step-number">1</div>
+        <h3>Open Extensions Page</h3>
+        <p>Go to your Chrome extensions page. This is where you manage all your browser extensions.</p>
+        <code>chrome://extensions/</code>
+      </div>
+      <div class="step-card animate-up">
+        <div class="step-number">2</div>
+        <h3>Enable Developer Mode</h3>
+        <p>Toggle the Developer mode switch in the top-right corner. This lets you load extensions from your local machine.</p>
+      </div>
+      <div class="step-card animate-up">
+        <div class="step-number">3</div>
+        <h3>Load TabFlow</h3>
+        <p>Click "Load unpacked" and select the <code>tabflow/</code> folder from the ZIP you downloaded. Open a new tab — and you're done.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section class="section">
+  <div class="container">
+    <div class="privacy-note">
+      <div class="shield">&#128737;</div>
+      <h3>Your Data Never Leaves Your Machine</h3>
+      <p>TabFlow stores everything using Chrome's <code>storage.local</code> API. No data is ever sent to any server. No tracking. No analytics. No accounts. No servers at all — the extension runs entirely in your browser. Your bookmarks are yours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="label">Pricing</div>
+      <h2>Free Forever. Pro Is Optional.</h2>
+      <p>The full bookmark dashboard is free, with no time limit. Pro adds cloud sync and advanced features for a single one-time payment.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Free -->
+      <div class="pricing-card animate-up">
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price">$0<span>/forever</span></div>
+        <p class="pricing-desc">The complete bookmark dashboard. Everything you need, with no expiration date.</p>
+        <ul class="pricing-features">
+          <li><span class="check">&check;</span> New tab dashboard</li>
+          <li><span class="check">&check;</span> AI organize (8 categories)</li>
+          <li><span class="check">&check;</span> Instant search</li>
+          <li><span class="check">&check;</span> Dark mode</li>
+          <li><span class="check">&check;</span> JSON export</li>
+          <li><span class="check">&check;</span> Local storage</li>
+          <li><span class="check">&check;</span> Zero dependencies</li>
+          <li><span class="dash">&mdash;</span> Cloud sync</li>
+          <li><span class="dash">&mdash;</span> Custom categories</li>
+          <li><span class="dash">&mdash;</span> Priority support</li>
+        </ul>
+        <a href="#download" class="pricing-btn primary">Get TabFlow Free</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card featured animate-up">
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price">$4.99<span> one-time</span></div>
+        <p class="pricing-desc">For power users who want cloud sync, custom categories, and advanced AI tagging. Pay once, use forever.</p>
+        <ul class="pricing-features">
+          <li><span class="check">&check;</span> <strong>Everything in Free</strong></li>
+          <li><span class="check">&check;</span> Cloud sync across devices</li>
+          <li><span class="check">&check;</span> Smarter AI tagging</li>
+          <li><span class="check">&check;</span> Custom categories</li>
+          <li><span class="check">&check;</span> Priority support</li>
+          <li><span class="check">&check;</span> Early access to new features</li>
+          <li><span class="check">&check;</span> Lifetime updates</li>
+          <li><span class="check">&check;</span> No recurring fees — ever</li>
+        </ul>
+        <a href="#download" class="pricing-btn primary">Download TabFlow Pro</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD CTA -->
+<section class="section" id="download">
+  <div class="container">
+    <div class="cta-banner">
+      <h2>Reclaim Your Bookmarks Today</h2>
+      <p>Download TabFlow now. Replace Chrome's broken new tab with an AI-organized dashboard. Free forever. No accounts. No cloud. Just your bookmarks, beautifully organized.</p>
+      <div class="cta-actions">
+        <a href="./tabflow.zip" class="btn-white" download>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download TabFlow
+        </a>
+        <a href="#install" class="btn-white-sub">Installation Guide</a>
+      </div>
+      <p class="cta-caption">Download the ZIP, extract it, and load as an unpacked Chrome extension. Works on Chrome, Edge, Brave, and Arc.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-logo">
+      <div class="nav-logo-icon" style="display:inline-flex;width:22px;height:22px;font-size:0.7rem">T</div>
+      TabFlow
+    </div>
+    <p style="margin-bottom:8px">AI Bookmark Dashboard for Chrome. Replace your new tab with something that actually works.</p>
+    <div class="footer-links">
+      <a href="#">Home</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="#features">Features</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="#compare">Compare</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="#install">Install</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="#pricing">Pricing</a>
+      <span class="footer-sep">&middot;</span>
+      <a href="#download">Download</a>
+    </div>
+    <p class="footer-legal">
+      Built by <strong>Selfloom</strong>. &copy; 2026. TabFlow is open source (MIT). Zero dependencies. Zero telemetry. Your data stays on your machine. No accounts required.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
